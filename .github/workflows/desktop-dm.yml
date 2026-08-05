@@ -1,0 +1,62 @@
+name: Desktop libcore (Doctor Mobile)
+
+# Builds the hiddify-core desktop library (the c-shared libcore the GUI apps
+# load) for Windows and Linux, so a future Windows/Linux desktop edition has its
+# sing-box core ready. Cross-compiled with CGO on a Linux runner; no cronet
+# (naive was trimmed). Publishes hiddify-lib-<target>.tar.gz to the v4.1.3
+# release the app already fetches from (`desktop-*` tag triggers it).
+on:
+  push:
+    tags: ['desktop-*']
+  workflow_dispatch:
+
+env:
+  TAGS: with_gvisor,with_quic,with_wireguard,with_utls,with_clash_api,with_grpc,tfogo_checklinkname0,with_conntrack
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: windows-amd64, goos: windows, goarch: amd64, cc: x86_64-w64-mingw32-gcc, out: hiddify-core.dll,      apt: gcc-mingw-w64-x86-64 }
+          - { name: linux-amd64,   goos: linux,   goarch: amd64, cc: gcc,                     out: libhiddify-core.so,   apt: '' }
+          - { name: linux-arm64,   goos: linux,   goarch: arm64, cc: aarch64-linux-gnu-gcc,   out: libhiddify-core.so,   apt: gcc-aarch64-linux-gnu }
+    steps:
+      - uses: actions/checkout@v4
+        with: { submodules: recursive, fetch-depth: 0 }
+      - uses: actions/setup-go@v5
+        with: { go-version: '1.25' }
+      - name: Install cross toolchain
+        if: matrix.apt != ''
+        run: sudo apt-get update && sudo apt-get install -y ${{ matrix.apt }}
+      - name: Build libcore (${{ matrix.name }})
+        run: |
+          CGO_ENABLED=1 CC=${{ matrix.cc }} GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
+            go build -buildmode=c-shared -tags "$TAGS" -trimpath \
+            -ldflags "-checklinkname=0 -s -w" \
+            -o "${{ matrix.out }}" ./platform/desktop
+          mkdir -p pkg
+          tar czf "pkg/hiddify-lib-${{ matrix.name }}.tar.gz" "${{ matrix.out }}"
+          ls -la pkg/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hiddify-lib-${{ matrix.name }}
+          path: pkg/hiddify-lib-${{ matrix.name }}.tar.gz
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts, merge-multiple: true }
+      - run: ls -la artifacts/
+      - name: Publish to the v4.1.3 release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v4.1.3
+          files: artifacts/hiddify-lib-*.tar.gz
