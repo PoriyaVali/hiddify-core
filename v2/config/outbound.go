@@ -134,9 +134,38 @@ func patchEndpoint(base *option.Endpoint, configOpt HiddifyOptions, staticIPs *m
 	}
 	return base, nil
 }
+
+// patchOutboundMirage turns on Mirage (TLS-record fragmentation shaped to beat
+// Iran's SNI-DPI) for every outbound that speaks TLS. Unlike the older
+// TLSTricks patch it deliberately does NOT skip REALITY or restrict itself to
+// websocket/gRPC transports: REALITY is exactly where it pays off, because
+// hiding the borrowed server name is what frees that name from having to be
+// reachable and unblocked from Iran.
+func patchOutboundMirage(base option.Outbound, configOpt HiddifyOptions) option.Outbound {
+	if !configOpt.Mirage.Enable {
+		return base
+	}
+	switch base.Type {
+	case C.TypeSelector, C.TypeURLTest, C.TypeBlock, C.TypeDNS, C.TypeDirect:
+		return base
+	}
+	tlsopt, ok := base.Options.(option.OutboundTLSOptionsWrapper)
+	if !ok {
+		return base
+	}
+	tls := tlsopt.TakeOutboundTLSOptions()
+	if tls == nil || !tls.Enabled {
+		return base
+	}
+	tls.Mirage = true
+	tls.MirageOffset = configOpt.Mirage.Offset
+	return base
+}
+
 func patchOutbound(base option.Outbound, configOpt HiddifyOptions, staticIPs *map[string][]string) (*option.Outbound, error) {
 
 	base = patchOutboundTLSTricks(base, configOpt)
+	base = patchOutboundMirage(base, configOpt)
 
 	// switch base.Type {
 	// case C.TypeVMess, C.TypeVLESS, C.TypeTrojan, C.TypeShadowsocks:

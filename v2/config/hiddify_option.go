@@ -23,12 +23,13 @@ type HiddifyOptions struct {
 	BalancerStrategy        string `json:"balancer-strategy,omitempty" overridable:"true"`
 	// GeoIPPath        string      `json:"geoip-path"`
 	// GeoSitePath      string      `json:"geosite-path"`
-	Rules     []Rule      `json:"rules,omitempty" overridable:"true"`
-	Warp      WarpOptions `json:"warp,omitempty"`
-	Warp2     WarpOptions `json:"warp2,omitempty"`
-	Mux       MuxOptions  `json:"mux,omitempty" overridable:"true"`
-	TLSTricks TLSTricks   `json:"tls-tricks,omitempty"`
-	EnableNTP bool        `json:"enable-ntp,omitempty"`
+	Rules     []Rule        `json:"rules,omitempty" overridable:"true"`
+	Warp      WarpOptions   `json:"warp,omitempty"`
+	Warp2     WarpOptions   `json:"warp2,omitempty"`
+	Mux       MuxOptions    `json:"mux,omitempty" overridable:"true"`
+	TLSTricks TLSTricks     `json:"tls-tricks,omitempty"`
+	Mirage    MirageOptions `json:"mirage,omitempty" overridable:"true"`
+	EnableNTP bool          `json:"enable-ntp,omitempty"`
 
 	DNSOptions
 	InboundOptions
@@ -72,6 +73,14 @@ type RouteOptions struct {
 	BypassLAN              bool                  `json:"bypass-lan,omitempty"`
 	AllowConnectionFromLAN bool                  `json:"allow-connection-from-lan,omitempty"`
 	BlockQuic              bool                  `json:"block-quic,omitempty"`
+}
+
+// MirageOptions controls Doctor Mobile's TLS-record fragmentation. Offset is
+// how many bytes of the handshake stay in the small first record; 0 uses the
+// measured default. See common/tlsfragment/mirage.go in the sing-box fork.
+type MirageOptions struct {
+	Enable bool `json:"enable,omitempty" overridable:"true"`
+	Offset int  `json:"offset,omitempty" overridable:"true"`
 }
 
 type TLSTricks struct {
@@ -163,6 +172,12 @@ func DefaultHiddifyOptions() *HiddifyOptions {
 			MixedSNICase:   false,
 			EnablePadding:  false,
 			PaddingSize:    "1200-1500",
+		},
+		// On by default: this is the one measure proven to get a TLS handshake
+		// past Iran's SNI-DPI from both a datacenter and a residential vantage,
+		// and it costs one extra record header per connection.
+		Mirage: MirageOptions{
+			Enable: true,
 		},
 		UseXrayCoreWhenPossible: false,
 	}
