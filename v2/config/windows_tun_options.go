@@ -37,16 +37,20 @@ func applyWindowsTUNOptions(options *option.Options, runtime WindowsTUNOptions) 
 			if err != nil || !ip.Is4() || !ip.IsGlobalUnicast() || netip.MustParsePrefix("198.18.0.0/15").Contains(ip) {
 				return fmt.Errorf("invalid Windows direct DNS address")
 			}
-			tag := fmt.Sprintf("dm-windows-direct-%d", i)
-			tags = append(tags, tag)
-			server, err := getDNSServerOptions(tag, "tcp://"+ip.String(), "", "")
-			if err != nil {
-				return err
+			// DHCP/local resolvers often accept UDP/53 without accepting TCP.
+			// Keep TCP as an alternative, not a prerequisite for all DIRECT DNS.
+			for _, protocol := range []string{"udp", "tcp"} {
+				tag := fmt.Sprintf("dm-windows-direct-%d-%s", i, protocol)
+				tags = append(tags, tag)
+				server, err := getDNSServerOptions(tag, protocol+"://"+ip.String(), "", "")
+				if err != nil {
+					return err
+				}
+				remote := server.Options.(*option.RemoteDNSServerOptions)
+				remote.BindInterface = runtime.Interface
+				remote.ConnectTimeout = badoption.Duration(5 * time.Second)
+				servers = append(servers, *server)
 			}
-			remote := server.Options.(*option.RemoteDNSServerOptions)
-			remote.BindInterface = runtime.Interface
-			remote.ConnectTimeout = badoption.Duration(5 * time.Second)
-			servers = append(servers, *server)
 			excluded = append(excluded, netip.PrefixFrom(ip, 32))
 		}
 		// Keep the tag every existing DNS rule references, but try the local

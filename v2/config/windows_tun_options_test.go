@@ -77,13 +77,15 @@ func TestWindowsRuntimeReachesFinalConfigWithoutWeakeningStrictRouting(t *testin
 	require.Equal(t, C.DNSTypeMulti, options.DNS.Servers[0].Type)
 	pool := options.DNS.Servers[0].Options.(*option.MultiDNSServerOptions)
 	require.True(t, pool.Parallel)
-	require.Len(t, pool.Servers, 2)
+	require.Len(t, pool.Servers, 4)
+	protocols := make(map[string]int)
 	for _, server := range options.DNS.Servers[1:] {
-		require.Equal(t, C.DNSTypeTCP, server.Type)
+		protocols[server.Type]++
 		remote := server.Options.(*option.RemoteDNSServerOptions)
 		require.Equal(t, "Wi-Fi", remote.BindInterface)
 		require.Empty(t, remote.Detour)
 	}
+	require.Equal(t, map[string]int{C.DNSTypeUDP: 2, C.DNSTypeTCP: 2}, protocols)
 }
 
 func TestWindowsBuildConfigWiringAndOtherPlatformsUnchanged(t *testing.T) {

@@ -1,5 +1,23 @@
 # Native-core handoff
 
+## 2026-09-07 - Codex - 1.9.5 field follow-up (UNCOMMITTED / NOT RELEASED)
+
+Owner confirms failures on 1.9.5. Runtime config has Wi-Fi binding and the four
+TCP transports, while dns-direct still times out. Windows-only builder now
+races UDP and TCP for every supplied physical resolver; the parent also sends
+DHCP DNS so DIRECT no longer depends entirely on four public TCP/53 services.
+Files: v2/config/windows_tun_options.go, windows_tun_options_test.go, this log.
+Strict routing and rule precedence unchanged. Tests updated, NOT YET RUN at
+this checkpoint. No live probe/reconnect or Windows firewall/route change.
+This does not prove the remaining DIRECT re-entry symptom is fixed.
+
+Follow-up validation: native config tests PASS with release Windows tags and
+-mod=readonly / -ldflags=-checklinkname=0. Parent Flutter suite 492 passed,
+1 skipped; analyzer exit 0. This follow-up has no native Android changes.
+Desktop Windows c-shared compilation also PASSED (42,180,608-byte DLL), staged
+in an owned temp directory and not installed/loaded. Source ready for commit;
+parent handoff will record the actual commit/push state. No release/tag moved.
+
 ## 2026-09-07 - Codex - Windows runtime egress for Doctor Mobile 1.9.5
 
 Base: clean doctormobile d7988e3; dm/doctormobile matched. Requested by the
