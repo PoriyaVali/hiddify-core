@@ -30,6 +30,8 @@ type HiddifyOptions struct {
 	TLSTricks TLSTricks     `json:"tls-tricks,omitempty"`
 	Mirage    MirageOptions `json:"mirage,omitempty" overridable:"true"`
 	EnableNTP bool          `json:"enable-ntp,omitempty"`
+	// Runtime-only Windows egress snapshot, supplied before starting the TUN.
+	WindowsTUN WindowsTUNOptions `json:"windows-tun,omitempty"`
 
 	DNSOptions
 	InboundOptions

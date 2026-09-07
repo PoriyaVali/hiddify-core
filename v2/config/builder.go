@@ -92,6 +92,11 @@ func BuildConfig(ctx context.Context, hopts *HiddifyOptions, inputOpt *ReadOptio
 	if err := setRoutingOptions(&options, hopts); err != nil {
 		return nil, err
 	}
+	if C.IsWindows && hopts.EnableTun {
+		if err := applyWindowsTUNOptions(&options, hopts.WindowsTUN); err != nil {
+			return nil, err
+		}
+	}
 
 	return &options, nil
 }

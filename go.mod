@@ -44,6 +44,7 @@ require (
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/database64128/netx-go v0.1.1 // indirect
 	github.com/database64128/tfo-go/v2 v2.3.2 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dblohm7/wingoes v0.0.0-20240119213807-a09d6be7affa // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.2 // indirect
@@ -75,6 +76,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/openai/openai-go/v3 v3.26.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus-community/pro-bing v0.4.0 // indirect
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/safchain/ethtool v0.3.0 // indirect
@@ -199,6 +201,7 @@ require (
 require (
 	github.com/hiddify/ray2sing v0.0.0-20260209214534-63c82f8c23a6
 	github.com/sagernet/sing-box v1.13.0
+	github.com/stretchr/testify v1.11.1
 	github.com/xmdhs/clash2singbox v0.1.4
 	gopkg.in/yaml.v3 v3.0.1
 )
