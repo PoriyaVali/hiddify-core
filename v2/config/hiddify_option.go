@@ -32,6 +32,9 @@ type HiddifyOptions struct {
 	EnableNTP bool          `json:"enable-ntp,omitempty"`
 	// Runtime-only Windows egress snapshot, supplied before starting the TUN.
 	WindowsTUN WindowsTUNOptions `json:"windows-tun,omitempty"`
+	// Runtime asset paths are applied after the final route builder, not to the
+	// subscription (which the builder replaces).
+	LocalRuleSets map[string]string `json:"local-rule-sets,omitempty"`
 
 	DNSOptions
 	InboundOptions
