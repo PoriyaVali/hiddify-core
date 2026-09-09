@@ -424,10 +424,16 @@ func setExperimental(options *option.Options, hopt *HiddifyOptions) {
 
 func setLog(options *option.Options, opt *HiddifyOptions) {
 	options.Log = &option.LogOptions{
-		Level:        opt.LogLevel,
-		Output:       opt.LogFile,
+		Level:  opt.LogLevel,
+		Output: opt.LogFile,
+		// A log line with no time is not evidence. Measured on the owner's
+		// phone: box.log held 696 lines, 177 of them one dead node's dial
+		// timeouts, with nothing to say which came from that morning and
+		// which from four days earlier - so no field report could be dated
+		// and no failure could be tied to a session. sing-box writes the
+		// timestamp itself; this only stops suppressing it.
 		Disabled:     false,
-		Timestamp:    false,
+		Timestamp:    true,
 		DisableColor: true,
 	}
 }
@@ -437,6 +443,60 @@ func isIPv6Supported() bool {
 	}
 	_, err := net.ResolveIPAddr("ip6", "::1")
 	return err == nil
+}
+
+// tunCarriesIPv6 decides whether the TUN is given an IPv6 address, and so
+// whether the operating system advertises IPv6 to every application behind it.
+//
+// [isIPv6Supported] used to be the only input. It asks whether this DEVICE can
+// resolve ::1, which loopback answers on essentially every phone, so the TUN
+// took an IPv6 address unconditionally. The switch on the user's own setting
+// that belongs here was present but commented out.
+//
+// Measured on the owner's Galaxy S24 Ultra with ipv6-mode set to ipv4_only:
+// every DNS rule in the generated config carried "strategy":"ipv4_only" and
+// the Clash API reported "ipv6":false, yet tun0 held fdfe:dcba:9876::1/126 and
+// an IPv6 default route, on a carrier whose interface had no IPv6 address at
+// all. Android therefore told every app the network had global IPv6 while the
+// core could not resolve or route a single AAAA - each attempt is a wasted
+// round trip before the app falls back.
+//
+// Only ipv4_only changes behaviour here. The three modes that ask for IPv6 in
+// any form keep exactly what they had, and a device without IPv6 support is
+// still refused it - that veto came first and stays first.
+func tunCarriesIPv6(mode option.DomainStrategy, deviceSupportsIPv6 bool) bool {
+	if !deviceSupportsIPv6 {
+		return false
+	}
+	return mode != option.DomainStrategy(C.DomainStrategyIPv4Only)
+}
+
+// rulesMatchProcess reports whether any rule actually matches on the process
+// that owns a connection, which is the only thing route.find_process feeds.
+//
+// The gate used to be len(manualRoutes) > 0, which is a different question.
+// Measured on the owner's phone: the single manual rule was an IP range (the
+// Iranian block-page /24) and find_process was still true, so the router looked
+// up the owning package for every connection to satisfy no rule at all.
+func rulesMatchProcess(rules []option.Rule) bool {
+	for _, rule := range rules {
+		switch rule.Type {
+		case C.RuleTypeDefault:
+			raw := rule.DefaultOptions.RawDefaultRule
+			if len(raw.PackageName)+len(raw.ProcessName)+
+				len(raw.ProcessPath)+len(raw.ProcessPathRegex) > 0 {
+				return true
+			}
+		case C.RuleTypeLogical:
+			// manualRouteRules only builds default rules today. Recursing
+			// anyway costs nothing and keeps the answer correct if it ever
+			// starts nesting them.
+			if rulesMatchProcess(rule.LogicalOptions.Rules) {
+				return true
+			}
+		}
+	}
+	return false
 }
 func setInbound(options *option.Options, hopt *HiddifyOptions) {
 	// var inboundDomainStrategy option.DomainStrategy
@@ -477,7 +537,7 @@ func setInbound(options *option.Options, hopt *HiddifyOptions) {
 
 		// }
 		opts.Address = []netip.Prefix{netip.MustParsePrefix("172.19.0.1/28")}
-		if ipv6Enable {
+		if tunCarriesIPv6(hopt.IPv6Mode, ipv6Enable) {
 			opts.Address = append(opts.Address, netip.MustParsePrefix("fdfe:dcba:9876::1/126"))
 		}
 
@@ -962,8 +1022,10 @@ func setRoutingOptions(options *option.Options, hopt *HiddifyOptions) error {
 			Strategy: hopt.DirectDnsDomainStrategy,
 		},
 		// OverrideAndroidVPN: hopt.EnableTun && C.IsAndroid,
-		RuleSet:     rulesets,
-		FindProcess: len(manualRoutes) > 0,
+		RuleSet: rulesets,
+		// Not len(manualRoutes) > 0 - see [rulesMatchProcess]. An IP or domain
+		// rule cannot read a process name, so it must not switch the lookup on.
+		FindProcess: rulesMatchProcess(manualRoutes),
 		// GeoIP: &option.GeoIPOptions{
 		// 	Path: opt.GeoIPPath,
 		// },
