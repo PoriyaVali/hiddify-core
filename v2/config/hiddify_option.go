@@ -86,6 +86,16 @@ type RouteOptions struct {
 type MirageOptions struct {
 	Enable bool `json:"enable,omitempty" overridable:"true"`
 	Offset int  `json:"offset,omitempty" overridable:"true"`
+	// Records and Coalesce are the SHAPE, which Offset cannot express, and the
+	// shape is what the two carriers measured on 2026-09-09 disagreed about:
+	// Hamrah-e Aval drops records that share one TCP write, Irancell accepts
+	// either. Separate writes ships because it is the only form measured to
+	// pass on both - but the disagreement is why these have to be reachable
+	// from the panel rather than settled in the source.
+	//
+	// Records 0 means the implementation's own default of two.
+	Records  int  `json:"records,omitempty" overridable:"true"`
+	Coalesce bool `json:"coalesce,omitempty" overridable:"true"`
 }
 
 type TLSTricks struct {

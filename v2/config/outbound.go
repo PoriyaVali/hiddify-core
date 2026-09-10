@@ -159,6 +159,12 @@ func patchOutboundMirage(base option.Outbound, configOpt HiddifyOptions) option.
 	}
 	tls.Mirage = true
 	tls.MirageOffset = configOpt.Mirage.Offset
+	// The shape travels with the offset. Without these two the panel can move
+	// where the first record ends but not how many records there are or whether
+	// they share one write - and the write count is exactly what the two
+	// carriers measured on 2026-09-09 disagreed about.
+	tls.MirageRecords = configOpt.Mirage.Records
+	tls.MirageCoalesce = configOpt.Mirage.Coalesce
 	return base
 }
 
