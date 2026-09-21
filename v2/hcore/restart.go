@@ -10,7 +10,8 @@ import (
 )
 
 func (s *CoreService) Restart(ctx context.Context, in *StartRequest) (*CoreInfoResponse, error) {
-	return Restart(static.BaseContext, in)
+	base, _ := static.platform.snapshot()
+	return Restart(base, in)
 }
 
 func Restart(ctx context.Context, in *StartRequest) (coreResponse *CoreInfoResponse, err error) {

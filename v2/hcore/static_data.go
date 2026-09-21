@@ -8,7 +8,6 @@ import (
 	"github.com/hiddify/hiddify-core/v2/config"
 	"github.com/sagernet/sing-box/common/monitoring"
 	"github.com/sagernet/sing-box/daemon"
-	"github.com/sagernet/sing-box/experimental/libbox"
 	"github.com/sagernet/sing-box/log"
 )
 
@@ -24,11 +23,10 @@ type HiddifyInstance struct {
 	outboundsInfoObserver     *monitoring.Broadcaster[*OutboundGroupList]
 	mainOutboundsInfoObserver *monitoring.Broadcaster[*OutboundGroupList]
 	lock                      sync.Mutex
-	globalPlatformInterface   libbox.PlatformInterface
+	platform                  platformState
 	previousStartRequest      *StartRequest
 	debug                     bool
 	ListenPort                uint16
-	BaseContext               context.Context
 	endPauseTimer             *time.Timer // only for ios
 
 	logLevel LogLevel

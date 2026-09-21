@@ -53,9 +53,8 @@ func Setup(params *SetupRequest, platformInterface libbox.PlatformInterface) err
 		Log(LogLevel_WARNING, LogType_CORE, "grpcServer already started")
 		return nil
 	}
-	static.BaseContext = libbox.BaseContext(platformInterface)
+	static.platform.configure(platformInterface)
 	static.debug = params.Debug
-	static.globalPlatformInterface = platformInterface
 	tcpConn := true // runtime.GOOS == "windows" // TODO add TVOS
 	libbox.Setup(
 		&libbox.SetupOptions{
@@ -296,5 +295,11 @@ func CloseGrpcServer(mode SetupMode) {
 	if server, ok := grpcServer[mode]; ok && server != nil {
 		server.Stop()
 		delete(grpcServer, mode)
+		if (mode == SetupMode_GRPC_BACKGROUND || mode == SetupMode_GRPC_BACKGROUND_INSECURE) &&
+			grpcServer[SetupMode_GRPC_BACKGROUND] == nil && grpcServer[SetupMode_GRPC_BACKGROUND_INSECURE] == nil {
+			// Release the Android service only when the VPN server goes away.
+			// Closing the Activity's foreground server must preserve this binding.
+			static.platform.clear()
+		}
 	}
 }
