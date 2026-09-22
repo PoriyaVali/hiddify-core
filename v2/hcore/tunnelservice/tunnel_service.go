@@ -86,6 +86,7 @@ func makeTunnelConfig(in *TunnelStartRequest) option.Options {
 						RawDefaultRule: option.RawDefaultRule{
 							ProcessName: []string{
 								"Hiddify.exe",
+								"Doctor Mobile.exe", // Current desktop executable name.
 								"Hiddify",
 								"HiddifyCli",
 								"HiddifyCli.exe",
