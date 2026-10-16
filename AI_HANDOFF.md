@@ -36,7 +36,7 @@ Validation (Linux, this session):
 - The Windows CI's `go test` set passes with the release tags.
 - `go.sum` is unchanged.
 
-Update, same day: the submodule now points at hiddify-sing-box b5f23bf9.
+Update, same day: the submodule pointer moved on twice.
 - 97468a87 fixes a Codex review finding (hiddify-sing-box#2). A request that
   took a pooled session left its own stalled handshake unbounded, because the
   20 s bound waited for the request's context, and sing-box's lives as long as
@@ -49,6 +49,11 @@ Update, same day: the submodule now points at hiddify-sing-box b5f23bf9.
   -checklinkname=0: ./cmd/main links for android/arm64, windows/amd64 and
   linux/amd64. For android/arm, which links only through cgo, the anytls and
   libbox packages compile.
+
+- 263a68ec (second Codex finding): a SYNACK is timed only against its own
+  stream's SYN. A late SYNACK for an earlier stream was timed against the
+  next stream's SYN, a sample far too short. peerVersion is now atomic, an
+  upstream data race the new test exposed. The submodule points at 263a68ec.
 
 NOT done: gomobile bind (no NDK here; the app's CI builds it), and any phone
 test.
