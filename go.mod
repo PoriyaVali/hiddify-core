@@ -221,3 +221,7 @@ replace github.com/hiddify/ray2sing => ./ray2sing
 replace github.com/sagernet/sing-box => ./hiddify-sing-box
 
 replace github.com/sagernet/wireguard-go => ./hiddify-sing-box/replace/wireguard-go
+
+// sing-anytls v0.0.13 with the weak-link fixes the app's mihomo client
+// carries; see hiddify-sing-box/replace/sing-anytls/README.dm.md.
+replace github.com/anytls/sing-anytls => ./hiddify-sing-box/replace/sing-anytls

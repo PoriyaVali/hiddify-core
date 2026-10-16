@@ -1,5 +1,44 @@
 # Native-core handoff
 
+## 2026-10-16 - Claude (cloud session) - anytls client weak-link fixes (BRANCH, NOT RELEASED)
+
+Owner asked for the fixes made to the mihomo core's anytls client
+(PoriyaVali/mihomo#2) to be applied to sing-box too.
+
+Files: go.mod (one `replace` line), the hiddify-sing-box submodule pointer, and
+this log. The work itself is in hiddify-sing-box `replace/sing-anytls`:
+sing-anytls v0.0.13, vendored as its own unchanged commit, then patched. Its
+README.dm.md lists each change and its evidence.
+
+What changes for every anytls node:
+- A FIN behind a slow upload no longer kills the session. The control frame
+  waits for the write lock and gets a 30 s bound that counts only a holder
+  making no progress; writes go out in 16 KiB chunks.
+- The SYNACK watchdog follows the observed acknowledgement time (3-12 s), not
+  a fixed 3 s.
+- Session timings use the monotonic clock.
+- Pool:
+  - closed sessions are never pooled;
+  - a request waiting on a handshake takes a session that joins the pool
+    meanwhile;
+  - a handshake its request abandoned goes on for up to 20 s and is pooled.
+- TCP_NOTSENT_LOWAT 16 KiB on the socket.
+- v0.0.13 itself also fixes a >64 KiB write corrupting the stream, FIN after
+  pool return, and Close not unblocking stuck I/O.
+
+Validation (Linux, this session):
+- Unmodified v0.0.11 fails behavioural copies of three tests; the patched copy
+  passes them.
+- `go test` and `go test -race` pass on the vendored module.
+- hiddify-core builds with the release tags and `-mod=readonly` for
+  android/arm64, android/arm, linux/amd64 and windows/amd64.
+- The Windows CI's `go test` set passes with the release tags.
+- `go.sum` is unchanged.
+
+NOT done: gomobile bind (no NDK here; the app's CI builds it), and any phone
+test. The weak-link bench comparison was still running when this was written;
+the parent repo's handoff records its result.
+
 ## 2026-09-07 - Codex - 1.9.5 field follow-up (UNCOMMITTED / NOT RELEASED)
 
 Owner confirms failures on 1.9.5. Runtime config has Wi-Fi binding and the four
