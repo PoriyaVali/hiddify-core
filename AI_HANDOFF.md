@@ -2,6 +2,20 @@
 
 ## 2026-10-16 - Codex - Doctor Mobile 2.2.3 integration validation (IN PROGRESS, NOT RELEASED)
 
+Codex re-review found P2 PRRT_kwDOTsK8I86tV3DR: go.sum included only
+Tailscale mod.10's go.mod digest after MVS selected that version. Fixed by
+`go mod download github.com/sagernet/tailscale@v1.92.4-sing-box-1.13-mod.10`,
+adding the missing full content checksum (one line in go.sum). Reproduction:
+readonly `go list -tags=...,with_tailscale -deps ./cmd/main` with the prior
+module/checksum snapshot fails with missing go.sum entries for Tailscale;
+the same dependency traversal using the fixed checksum file PASSES. This
+validates checksum resolution, not the pre-existing unshipped Tailscale
+type/interface incompatibility described above. Production release tags do
+not enable Tailscale and the previously passing production graph is unchanged.
+The intermediate first reproduction invocation had a PowerShell native-flag
+quoting error; it was corrected and the actual missing-checksum failure was
+observed before claiming reproduction. No app/native semantic source changed.
+
 Committed/pushed integration source: 4f3787fb53f90e9644d53b44ae4c210891219d58
 on PR1. Final validation complete locally: release-tag `-mod=readonly`
 `go test ./...` AND `go test -race ./...` PASSED (observed exit 0). Android
