@@ -2,6 +2,25 @@
 
 ## 2026-10-16 - Codex - Doctor Mobile 2.2.3 integration validation (IN PROGRESS, NOT RELEASED)
 
+Committed/pushed integration source: 4f3787fb53f90e9644d53b44ae4c210891219d58
+on PR1. Final validation complete locally: release-tag `-mod=readonly`
+`go test ./...` AND `go test -race ./...` PASSED (observed exit 0). Android
+arm64 CLI link and mobile/libbox compile, Linux amd64 CLI link and Windows
+amd64 c-shared DLL build all PASSED. New native Android CI 38952467479 and
+Codex re-review are running on that exact source head. PR1 is NOT yet merged
+at this checkpoint. No local DLL is being shipped; app CI rebuilds cleanly.
+
+Mihomo tag Android run 38951834813 and desktop run 38951834343 both finished
+SUCCESS. Public v1.19.32-dm3 has 10 binaries and SHA256SUMS.txt. Independently
+downloaded all 3 Android ABIs plus Windows amd64: every SHA256 matches GitHub
+asset digest; ELF class/machine/type match arm64, armv7 and x86_64. Each Go
+build metadata reports source 5dcbf0b3, vcs.modified=false, Go 1.25.14.
+Downloaded Windows `-v` reports v1.19.32-dm3/with_gvisor; GOAMD64=v1 verified.
+Additional AnyTLS tests with Go compiler `-lang=go1.20` PASSED. This validates
+the changed source dialect, not a whole modern dependency graph on Go 1.20.
+Mihomo release notes document source and CI links. Native app signing is
+outside these core checks and no physical VPN traffic is claimed tested.
+
 Final integration checkpoint before commit: minimal MVS refresh succeeded,
 then `go test -mod=readonly` with all release tags and
 `-ldflags=-checklinkname=0 ./...` PASSED on final sing-box pointer 76e4f8d5.
