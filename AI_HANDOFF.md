@@ -1,5 +1,80 @@
 # Native-core handoff
 
+## 2026-10-16 - Codex - Doctor Mobile 2.2.3 integration validation (IN PROGRESS, NOT RELEASED)
+
+Final integration checkpoint before commit: minimal MVS refresh succeeded,
+then `go test -mod=readonly` with all release tags and
+`-ldflags=-checklinkname=0 ./...` PASSED on final sing-box pointer 76e4f8d5.
+go.mod updates are the versions required by that merged module (sing 0.8.14,
+sing-tun 0.8.15, sing-quic 0.6.5, wireguard 0.0.4 and its indirect graph),
+not an unconstrained tidy or dependency upgrade. go.sum adds 38 checksums.
+Final release-tag Windows c-shared build PASSED (42,377,728-byte DLL),
+Android arm64 CLI built and mobile/libbox compile is finishing, Linux amd64
+CLI build PASSED. Race-enabled full core suite is running, not claimed yet.
+Fixture and go.mod/go.sum source diff reviewed; `git diff --check` passed.
+
+Mihomo v1.19.32-dm3 release is now public with all 10 expected ABI/platform
+assets. All Android and Desktop/OpenWRT build jobs passed; final release job
+and downloaded-asset checks are being confirmed. The app must use dm3 rather
+than dm2. No Doctor Mobile app release has been published by this agent.
+
+Checkpoint update: GitHub confirms Mihomo PR4 merged at
+5dcbf0b34f64c5927e089aa5e68eff553efa384b; tag v1.19.32-dm3 was created
+and pushed there. Android tag run 38951834813 and Desktop/OpenWRT run
+38951834343 are running; assets are NOT yet verified or claimed published.
+Sing-box PR2 merged at 76e4f8d548763167656138db749ad122ec3abebb. Its tree
+6b44c21d778303d4c3ac7b1134f1d90b37b4788b exactly matches the tested local
+merge preview with newer main f3a43bea. All 115 release cmd/libbox graph
+module packages passed excluding pre-existing TestHosts, whose system-hosts
+assumption fails on this Windows machine; its fixed-file assertion passed in
+the complete attempt. Release-tag Windows executable build passed. Expanded
+`./...` still fails in unshipped tailscale/derp/oomkiller packages, unchanged
+by this merge; this is recorded, not hidden as a passing complete suite.
+
+The new deterministic profile fixture PASSED, then the complete hiddify-core
+release-tag suite PASSED with original sing-box pointer 3222c8c8. Windows
+c-shared DLL (42,351,104 bytes) and Android arm64 CLI (44,695,905 bytes) built
+successfully with observed exit 0 on that pointer; full gomobile is CI-only.
+Now UNCOMMITTED: submodule moved to final merged sing-box 76e4f8d5 to preserve
+newer main's 1.13.21 changes. The first `-mod=readonly` check correctly FAILED
+because integration go.mod needs dependency updates. Minimal `-mod=mod`
+refresh and full retest are running; this intermediate tree is not release
+ready until validated. Expected exact additional files: go.mod/go.sum,
+hiddify-sing-box, test fixture file, and this handoff. No integration commit
+has been pushed or merged yet.
+
+User authorized finishing, verifying and merging the core fixes for the signed
+Doctor Mobile 2.2.3 release. Original AnyTLS implementation and fixes in this
+branch are Claude's work; Codex is validating the integration and release path.
+
+Material change, currently UNCOMMITTED: `v2/profile/test/profile_test.go` now
+serves a fixed subscription from httptest and runs its database/profile writes
+inside a temporary working directory. Before this change the full release-tag
+suite failed in TestAddByContent because it downloaded the mutable upstream
+`hiddify-next/main/test.configs/warp`, whose contents now include unsupported
+Psiphon/URI content and a different title. The import, metadata and persistence
+assertions are preserved. This test file was identical on base 784a8823.
+Validation of the replacement fixture is running; no result claimed yet.
+
+Verified original head a6356fea: recursive submodules initialized, sing-box
+3222c8c8 and ray2sing e22a2eaf. Full release-tag `go test ./...` ran and FAILED
+only in that mutable-fixture profile test (all other packages passed). Android
+CI run 38937862876 passed its native build on that head. Local Windows c-shared
+and Android arm64 native build checks are running, not yet claimed passed.
+
+Sing-box vendored AnyTLS `go test -mod=readonly -race -count=3 ./...` PASSED
+with observed exit 0 (session package 119.624s). Mihomo full `go test
+-mod=readonly ./...` PASSED with persisted exit 0. Initial interrupted checks
+without exit status were rerun; their log text alone was not counted as pass.
+All four Sing-box Codex review threads are resolved; no review threads exist
+on Mihomo PR4 or this PR1. No PR merged, core tag created or release published
+by this Codex session at this checkpoint.
+
+Remaining: validate fixture and final integrated dependency tree, final tests
+and native builds, update the sing-box pointer if main integration changes it,
+record exact commits/merge SHAs, and publish the required Mihomo core assets.
+No phone/TUN live network behavior or original app signing is proven here.
+
 ## 2026-10-16 - Claude (cloud session) - anytls client weak-link fixes (BRANCH, NOT RELEASED)
 
 Owner asked for the fixes made to the mihomo core's anytls client

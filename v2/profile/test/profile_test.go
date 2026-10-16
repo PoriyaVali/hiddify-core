@@ -2,6 +2,9 @@ package test
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/hiddify/hiddify-core/v2/profile"
@@ -9,8 +12,32 @@ import (
 )
 
 func TestAddByContent(t *testing.T) {
+	// Keep the import and metadata checks independent of a mutable upstream
+	// subscription, which can change its title and supported protocols.
+	workingDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(t.TempDir()); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(workingDir); err != nil {
+			t.Error(err)
+		}
+	})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `//profile-title: base64:8J+UpSBXQVJQIPCflKU=
+//profile-update-interval: 24
+//subscription-userinfo: upload=0; download=0; total=10737418240000000; expire=2546249531
+//support-url: https://t.me/hiddify
+//profile-web-page-url: https://hiddify.com
+{"outbounds":[{"type":"socks","tag":"fixture","server":"127.0.0.1","server_port":1080}]}
+`)
+	}))
+	t.Cleanup(server.Close)
 	ctx := libbox.BaseContext(nil)
-	entity, err := profile.AddByUrl(ctx, "https://raw.githubusercontent.com/hiddify/hiddify-next/refs/heads/main/test.configs/warp", "", false)
+	entity, err := profile.AddByUrl(ctx, server.URL, "", false)
 	if err != nil {
 		t.Fatalf("expected no error, but got: %v", err)
 	}
