@@ -21,7 +21,8 @@ What changes for every anytls node:
   - closed sessions are never pooled;
   - a request waiting on a handshake takes a session that joins the pool
     meanwhile;
-  - a handshake its request abandoned goes on for up to 20 s and is pooled.
+  - a handshake its request no longer waits for (it gave up, or took a pooled
+    session) goes on for up to 20 s and is pooled.
 - TCP_NOTSENT_LOWAT 16 KiB on the socket.
 - v0.0.13 itself also fixes a >64 KiB write corrupting the stream, FIN after
   pool return, and Close not unblocking stuck I/O.
@@ -35,9 +36,22 @@ Validation (Linux, this session):
 - The Windows CI's `go test` set passes with the release tags.
 - `go.sum` is unchanged.
 
+Update, same day: the submodule now points at hiddify-sing-box b5f23bf9.
+- 97468a87 fixes a Codex review finding (hiddify-sing-box#2). A request that
+  took a pooled session left its own stalled handshake unbounded, because the
+  20 s bound waited for the request's context, and sing-box's lives as long as
+  the connection. A new test fails without the fix.
+- b5f23bf9 records the weak-link bench in README.dm.md. Requests right after
+  cancelled uploads on the bad link: 93.3% succeeded (196/210, 7 seeds)
+  against 87.1% with v0.0.11. Counting failures, no percentile was slower.
+  Browsing and downloads showed no difference beyond the spread between runs.
+- Rebuilt with GOTOOLCHAIN=go1.25.6, -mod=readonly, the release tags and
+  -checklinkname=0: ./cmd/main links for android/arm64, windows/amd64 and
+  linux/amd64. For android/arm, which links only through cgo, the anytls and
+  libbox packages compile.
+
 NOT done: gomobile bind (no NDK here; the app's CI builds it), and any phone
-test. The weak-link bench comparison was still running when this was written;
-the parent repo's handoff records its result.
+test.
 
 ## 2026-09-07 - Codex - 1.9.5 field follow-up (UNCOMMITTED / NOT RELEASED)
 
