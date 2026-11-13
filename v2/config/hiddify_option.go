@@ -96,6 +96,13 @@ type MirageOptions struct {
 	// Records 0 means the implementation's own default of two.
 	Records  int  `json:"records,omitempty" overridable:"true"`
 	Coalesce bool `json:"coalesce,omitempty" overridable:"true"`
+	// Auto starts from the shape above and moves a server to the next
+	// candidate when its shape is reset, cut or met with silence, ending with
+	// the untouched ClientHello before the cycle starts again. It learns from
+	// the connections being made anyway (no probes of its own) and keeps a
+	// shape that works, so it can only rescue a shape a carrier has started
+	// to drop. On by default.
+	Auto bool `json:"auto" overridable:"true"`
 }
 
 type TLSTricks struct {
@@ -193,6 +200,7 @@ func DefaultHiddifyOptions() *HiddifyOptions {
 		// and it costs one extra record header per connection.
 		Mirage: MirageOptions{
 			Enable: true,
+			Auto:   true,
 		},
 		UseXrayCoreWhenPossible: false,
 	}

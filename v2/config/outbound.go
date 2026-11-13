@@ -171,6 +171,7 @@ func patchOutboundMirage(base option.Outbound, configOpt HiddifyOptions) option.
 	// carriers measured on 2026-09-09 disagreed about.
 	tls.MirageRecords = configOpt.Mirage.Records
 	tls.MirageCoalesce = configOpt.Mirage.Coalesce
+	tls.MirageAuto = configOpt.Mirage.Auto
 	return base
 }
 
