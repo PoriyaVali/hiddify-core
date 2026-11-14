@@ -23,13 +23,16 @@ type HiddifyOptions struct {
 	BalancerStrategy        string `json:"balancer-strategy,omitempty" overridable:"true"`
 	// GeoIPPath        string      `json:"geoip-path"`
 	// GeoSitePath      string      `json:"geosite-path"`
-	Rules     []Rule        `json:"rules,omitempty" overridable:"true"`
-	Warp      WarpOptions   `json:"warp,omitempty"`
-	Warp2     WarpOptions   `json:"warp2,omitempty"`
-	Mux       MuxOptions    `json:"mux,omitempty" overridable:"true"`
-	TLSTricks TLSTricks     `json:"tls-tricks,omitempty"`
-	Mirage    MirageOptions `json:"mirage,omitempty" overridable:"true"`
-	EnableNTP bool          `json:"enable-ntp,omitempty"`
+	Rules     []Rule      `json:"rules,omitempty" overridable:"true"`
+	Warp      WarpOptions `json:"warp,omitempty"`
+	Warp2     WarpOptions `json:"warp2,omitempty"`
+	Mux       MuxOptions  `json:"mux,omitempty" overridable:"true"`
+	TLSTricks TLSTricks   `json:"tls-tricks,omitempty"`
+	// TransferCheck makes the automatic groups prefer nodes that carried a
+	// real upload and download (Doctor Mobile). Off unless the app sends it.
+	TransferCheck TransferCheckOptions `json:"transfer-check,omitempty"`
+	Mirage        MirageOptions        `json:"mirage,omitempty" overridable:"true"`
+	EnableNTP     bool                 `json:"enable-ntp,omitempty"`
 	// Runtime-only Windows egress snapshot, supplied before starting the TUN.
 	WindowsTUN WindowsTUNOptions `json:"windows-tun,omitempty"`
 	// Runtime asset paths are applied after the final route builder, not to the
@@ -103,6 +106,11 @@ type MirageOptions struct {
 	// shape that works, so it can only rescue a shape a carrier has started
 	// to drop. On by default.
 	Auto bool `json:"auto" overridable:"true"`
+}
+
+type TransferCheckOptions struct {
+	Enable    bool     `json:"enable,omitempty"`
+	Endpoints []string `json:"endpoints,omitempty"`
 }
 
 type TLSTricks struct {

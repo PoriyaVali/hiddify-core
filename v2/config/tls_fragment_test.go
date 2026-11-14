@@ -170,3 +170,30 @@ func TestTLSTricksReachPointerOutbounds(t *testing.T) {
 	out := patchOutboundTLSTricks(plain, hopts)
 	require.False(t, out.Options.(option.DialerOptionsWrapper).TakeDialerOptions().TLSFragment.Enabled)
 }
+
+// The app's transfer-check block reaches the sing-box monitor; without it the
+// check stays off.
+func TestTransferCheckReachesTheMonitor(t *testing.T) {
+	t.Parallel()
+	hopts := DefaultHiddifyOptions()
+	require.NoError(t, json.Unmarshal([]byte(`{"transfer-check":{"enable":true,"endpoints":["https://ddr.example/dm-transfer-v1.php"]}}`), hopts))
+	ctx := libbox.BaseContext(nil)
+	built, err := BuildConfig(ctx, hopts, &ReadOptions{Options: &option.Options{Outbounds: []option.Outbound{{
+		Type: C.TypeSOCKS, Tag: "node", Options: &option.SOCKSOutboundOptions{ServerOptions: option.ServerOptions{Server: "192.0.2.1", ServerPort: 1080}},
+	}}}})
+	require.NoError(t, err)
+	require.NotNil(t, built.Experimental)
+	require.NotNil(t, built.Experimental.Monitoring)
+	check := built.Experimental.Monitoring.TransferCheck
+	require.NotNil(t, check)
+	require.True(t, check.Enabled)
+	require.Equal(t, []string{"https://ddr.example/dm-transfer-v1.php"}, check.Endpoints)
+
+	off, err := BuildConfig(ctx, DefaultHiddifyOptions(), &ReadOptions{Options: &option.Options{Outbounds: []option.Outbound{{
+		Type: C.TypeSOCKS, Tag: "node", Options: &option.SOCKSOutboundOptions{ServerOptions: option.ServerOptions{Server: "192.0.2.1", ServerPort: 1080}},
+	}}}})
+	require.NoError(t, err)
+	if off.Experimental != nil && off.Experimental.Monitoring != nil && off.Experimental.Monitoring.TransferCheck != nil {
+		require.False(t, off.Experimental.Monitoring.TransferCheck.Enabled)
+	}
+}
