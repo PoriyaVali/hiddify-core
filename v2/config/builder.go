@@ -441,13 +441,30 @@ func setLog(options *option.Options, opt *HiddifyOptions) {
 		DisableColor: true,
 	}
 }
+
+// isIPv6Supported reports whether this host can open IPv6 sockets at all.
+//
+// It used to resolve "::1", which succeeds on every host: resolving an IP
+// literal never touches the network stack. On a host with IPv6 turned off -
+// an OpenWrt router, Linux booted with ipv6.disable=1, many containers -
+// setInbound then added its mixed (and tproxy, redirect, direct) listeners on
+// ::1, or on :: with LAN access on, the first of them failed to bind with
+// "address family not supported by protocol", and the core did not start.
 func isIPv6Supported() bool {
 	if C.IsIos || C.IsDarwin {
 		return true
 	}
-	_, err := net.ResolveIPAddr("ip6", "::1")
-	return err == nil
+	ln, err := net.Listen("tcp6", "[::1]:0")
+	if err != nil {
+		return false
+	}
+	_ = ln.Close()
+	return true
 }
+
+// ipv6Supported is the probe setInbound uses; a variable so tests can play a
+// host without IPv6.
+var ipv6Supported = isIPv6Supported
 
 // tunCarriesIPv6 decides whether the TUN is given an IPv6 address, and so
 // whether the operating system advertises IPv6 to every application behind it.
@@ -509,7 +526,7 @@ func setInbound(options *option.Options, hopt *HiddifyOptions) {
 	// } else {
 	// 	inboundDomainStrategy = opt.IPv6Mode
 	// }
-	ipv6Enable := isIPv6Supported()
+	ipv6Enable := ipv6Supported()
 	if hopt.EnableTun {
 
 		opts := option.TunInboundOptions{
