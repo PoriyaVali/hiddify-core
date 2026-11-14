@@ -67,7 +67,7 @@ func TestRulesMatchProcess(t *testing.T) {
 	// The old gate said yes to this set purely because it was non-empty.
 	measured := []option.Rule{
 		processRule(t, `{"ip_cidr":["10.10.34.0/24"],"outbound":"select"}`),
-		processRule(t, `{"domain_suffix":"drmobjay.com","outbound":"direct"}`),
+		processRule(t, `{"domain_suffix":"example.com","outbound":"direct"}`),
 	}
 	require.False(t, rulesMatchProcess(measured))
 	require.Positive(t, len(measured), "the old gate would have enabled find_process for exactly this")
