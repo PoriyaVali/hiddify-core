@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"testing"
 
 	C "github.com/sagernet/sing-box/constant"
@@ -65,4 +66,22 @@ func TestMirageSkipsNonTLS(t *testing.T) {
 func TestMirageDefaultOn(t *testing.T) {
 	t.Parallel()
 	require.True(t, DefaultHiddifyOptions().Mirage.Enable)
+}
+
+// Auto reaches the outbound, is on by default, and an app that sends the
+// mirage block without it (an older build) keeps the default.
+func TestMirageAutoReachesOutbound(t *testing.T) {
+	t.Parallel()
+	require.True(t, DefaultHiddifyOptions().Mirage.Auto)
+
+	opts := DefaultHiddifyOptions()
+	require.NoError(t, json.Unmarshal([]byte(`{"mirage":{"enable":true,"offset":5,"records":2,"coalesce":false}}`), opts))
+	require.True(t, opts.Mirage.Auto, "an absent auto keeps the default")
+	tls := patchOutboundMirage(realityOutbound(), *opts).Options.(option.OutboundTLSOptionsWrapper).TakeOutboundTLSOptions()
+	require.True(t, tls.Mirage)
+	require.True(t, tls.MirageAuto)
+
+	require.NoError(t, json.Unmarshal([]byte(`{"mirage":{"enable":true,"auto":false}}`), opts))
+	tls = patchOutboundMirage(realityOutbound(), *opts).Options.(option.OutboundTLSOptionsWrapper).TakeOutboundTLSOptions()
+	require.False(t, tls.MirageAuto, "the app can turn it off")
 }

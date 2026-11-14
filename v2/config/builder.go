@@ -417,6 +417,10 @@ func setExperimental(options *option.Options, hopt *HiddifyOptions) {
 				Interval:       badoption.Duration(hopt.URLTestInterval.Duration()),
 				DebounceWindow: badoption.Duration(time.Millisecond * 500),
 				IdleTimeout:    badoption.Duration(hopt.URLTestInterval.Duration().Nanoseconds() * 3),
+				TransferCheck: &option.TransferCheckOptions{
+					Enabled:   hopt.TransferCheck.Enable,
+					Endpoints: hopt.TransferCheck.Endpoints,
+				},
 			},
 		}
 	}

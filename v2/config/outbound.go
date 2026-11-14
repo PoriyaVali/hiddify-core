@@ -37,12 +37,18 @@ func patchOutboundTLSTricks(base option.Outbound, configOpt HiddifyOptions) opti
 		tls = tlsopt.TakeOutboundTLSOptions()
 	}
 
+	// sing-box keeps outbound options as pointers (its JSON registry creates
+	// them with new()), so the value-type assertions that used to stand here
+	// never matched a real outbound: transport stayed nil and the function
+	// returned before applying anything. The app's fragment and mixed-SNI
+	// switches never reached a single proxy node.
 	var transport *option.V2RayTransportOptions
-	if opts, ok := base.Options.(option.VLESSOutboundOptions); ok {
+	switch opts := base.Options.(type) {
+	case *option.VLESSOutboundOptions:
 		transport = opts.Transport
-	} else if opts, ok := base.Options.(option.TrojanOutboundOptions); ok {
+	case *option.TrojanOutboundOptions:
 		transport = opts.Transport
-	} else if opts, ok := base.Options.(option.VMessOutboundOptions); ok {
+	case *option.VMessOutboundOptions:
 		transport = opts.Transport
 	}
 
@@ -165,6 +171,7 @@ func patchOutboundMirage(base option.Outbound, configOpt HiddifyOptions) option.
 	// carriers measured on 2026-09-09 disagreed about.
 	tls.MirageRecords = configOpt.Mirage.Records
 	tls.MirageCoalesce = configOpt.Mirage.Coalesce
+	tls.MirageAuto = configOpt.Mirage.Auto
 	return base
 }
 
